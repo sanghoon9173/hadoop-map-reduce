@@ -49,18 +49,15 @@ public class OrphanPages extends Configured implements Tool {
     public static class LinkCountMap extends Mapper<Object, Text, IntWritable, IntWritable> {
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-//            String[] line = value.toString().split(":");
-//            //set the current page to have 0 links
-//            context.write(new IntWritable(Integer.parseInt(line[0].trim())), new IntWritable(0));
-//            StringTokenizer tokenizer = new StringTokenizer(line[1], " \t");
-//
-//            //set all the links in the current pages to have 1 link
-//            while (tokenizer.hasMoreTokens()) {
-//                context.write(new IntWritable(Integer.parseInt(tokenizer.nextToken().trim())), new IntWritable(1));
-//            }
-
             String[] line = value.toString().split(":");
-            context.write(new IntWritable(Integer.parseInt(line[0].trim())), new IntWritable(line[1].trim().split(" ").length));
+            //set the current page to have 0 links
+            context.write(new IntWritable(Integer.parseInt(line[0].trim())), new IntWritable(0));
+            StringTokenizer tokenizer = new StringTokenizer(line[1], " \t");
+
+            //set all the links in the current pages to have 1 link
+            while (tokenizer.hasMoreTokens()) {
+                context.write(new IntWritable(Integer.parseInt(tokenizer.nextToken().trim())), new IntWritable(1));
+            }
         }
     }
 
@@ -69,7 +66,9 @@ public class OrphanPages extends Configured implements Tool {
         public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             int count=0;
             for(IntWritable currentPage: values) {
-                count++;
+                if(currentPage.get() >0) {
+                    count++;
+                }
             }
             if(count==0) {
                 context.write(key, NullWritable.get());
